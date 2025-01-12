@@ -76,10 +76,6 @@ data/queries.json
         "中华人民共和国民法典第五十四条": "自然人从事工商业经营，经依法登记，为个体工商户。个体工商户可以起字号。\n",
         "个体工商户条例第二条": "有经营能力的公民，依照本条例规定经工商行政管理部门登记，从事工商业经营的，为个体工商户。\n\n个体工商户可以个人经营，也可以家庭经营。\n\n个体工商户的合法权益受法律保护，任何单位和个人不得侵害。\n"
     },
-    "典型案例": NaN,
-    "典型案例链接": NaN,
-    "店铺": "个体工商户与农村承包经营户纠纷-沈子宜",
-    "关键词（5个以内）": NaN,
     "match_id": [
         705,
         49282
@@ -100,10 +96,6 @@ Translated:
         "Article 54 of the Civil Code of the People's Republic of China": "A natural person engaging in industrial and commercial activities, registered according to the law, is an individual industrial and commercial household. An individual industrial and commercial household may adopt a trade name.\n",
         "Article 2 of the Individual Industrial and Commercial Household Regulation": "Citizens with the capacity to operate a business, upon registration with the administrative department for industry and commerce as per the provisions of this regulation, engaging in industrial and commercial activities, are individual industrial and commercial households.\n\nIndividual industrial and commercial households can be operated by an individual or by a family.\n\nThe lawful rights and interests of individual industrial and commercial households are protected by law, and no organization or individual may infringe upon them.\n"
     },
-    "Typical Cases": NaN,
-    "Typical Case Links": NaN,
-    "Store": "Dispute between Individual Industrial and Commercial Household and Rural Contracted Operating Household - Shen Ziyi",
-    "Keywords (up to 5)": NaN,
     "match_id": [
         705,
         49282
