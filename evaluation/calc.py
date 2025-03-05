@@ -1,67 +1,66 @@
 import jieba
-from rouge_score import rouge_scorer
+import json
+import argparse
 from bert_score import score
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-import json
 from nltk.translate.meteor_score import meteor_score
 
-# 加载 JSON 数据
-with open('your_file.json', 'r') as file:
-    data = json.load(file)
-
-# 初始化指标存储
-results = {
-    "METEOR": [],
-    "BERTScore": [],
-    "BLEU": [],
-    "ROUGE": [],  # 新增综合 ROUGE 指标
-}
-
-# 初始化 ROUGE 评分器
-scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=False)  # 中文无需词干化
-
-# BLEU 平滑函数
-smoothie = SmoothingFunction().method4
-
-# 逐条计算指标
-for item in data:
-    exp_ans = item["exp_ans"]
-    gen_ans = item["gen_ans"]
+class Evaluator:
+    def __init__(self, gen_file, exp_file):
+        self.gen_data = self.load_data(gen_file)
+        self.exp_data = self.load_data(exp_file)
+        assert self.gen_data.keys() == self.exp_data.keys(), "Mismatch between gen_data and exp_data keys"
+        
+        self.results = {
+            "METEOR": [],
+            "BERTScore": [],
+            "BLEU": []
+        }
+        self.smoothie = SmoothingFunction().method4
     
-    # 计算METEOR分数
-    reference_tokens = list(jieba.cut(exp_ans))
-    hypothesis_tokens = list(jieba.cut(gen_ans))
-    score_meteor = meteor_score([reference_tokens], hypothesis_tokens)
-    results["METEOR"].append(score_meteor)
+    def load_data(self, file_path):
+        """加载 JSONL 文件"""
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return {item['id']: item['answer'] for item in (json.loads(line) for line in file)}
+    
+    def calculate_metrics(self, exp_text, gen_text):
+        """计算各项评估指标"""
+        # METEOR
+        reference_tokens = list(jieba.cut(exp_text))
+        hypothesis_tokens = list(jieba.cut(gen_text))
+        self.results["METEOR"].append(meteor_score([reference_tokens], hypothesis_tokens))
+        
+        # BLEU
+        self.results["BLEU"].append(sentence_bleu([reference_tokens], hypothesis_tokens, smoothing_function=self.smoothie))
+    
+    def calculate_bert_score(self):
+        """计算 BERTScore"""
+        local_model_path = "bert-base-chinese"
+        gen_ans_list = [" ".join(jieba.cut(self.gen_data[idx])) for idx in self.gen_data]
+        exp_ans_list = [" ".join(jieba.cut(self.exp_data[idx])) for idx in self.exp_data]
+        
+        _, _, F1 = score(gen_ans_list, exp_ans_list, model_type=local_model_path)
+        self.results["BERTScore"] = F1.tolist()
+    
+    def run(self):
+        """执行评测流程"""
+        for idx in self.exp_data:
+            self.calculate_metrics(self.exp_data[idx], self.gen_data[idx])
+        self.calculate_bert_score()
+        self.print_results()
+    
+    def print_results(self):
+        """打印计算出的指标均值"""
+        print("平均指标：")
+        for metric, scores in self.results.items():
+            mean_score = sum(scores) / len(scores) if scores else 0
+            print(f"{metric}: Mean = {mean_score:.4f}")
 
-    # 计算 ROUGE 分数
-    rouge_scores = scorer.score(" ".join(jieba.cut(exp_ans)), " ".join(jieba.cut(gen_ans)))
-    rouge1 = rouge_scores['rouge1'].fmeasure
-    rouge2 = rouge_scores['rouge2'].fmeasure
-    rougeL = rouge_scores['rougeL'].fmeasure
-
-    # 计算综合 ROUGE 指标（加权平均）
-    rouge_combined = (rouge1 + rouge2 + rougeL) / 3  # 等权重
-    results["ROUGE"].append(rouge_combined)
-
-    # 分词处理
-    exp_ans_tokens = list(jieba.cut(exp_ans))
-    gen_ans_tokens = list(jieba.cut(gen_ans))
-
-    # 计算 BLEU 分数
-    bleu_score = sentence_bleu([exp_ans_tokens], gen_ans_tokens, smoothing_function=smoothie)
-    results["BLEU"].append(bleu_score)
-
-# 使用本地模型路径计算 BERTScore
-local_model_path = "bert-base-chinese"  # Hugging Face 模型名称
-gen_ans_list = [" ".join(jieba.cut(item["gen_ans"])) for item in data]
-exp_ans_list = [" ".join(jieba.cut(item["exp_ans"])) for item in data]
-
-P, R, F1 = score(gen_ans_list, exp_ans_list, model_type=local_model_path, verbose=True)
-results["BERTScore"] = F1.tolist()  # 转为普通列表方便查看
-
-# 计算并输出每个指标的平均值
-print("平均指标：")
-for metric, scores in results.items():
-    mean_score = sum(scores) / len(scores)
-    print(f"{metric}: Mean = {mean_score:.4f}")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="计算 NLP 评测指标")
+    parser.add_argument('--gen_file', type=str, required=True, help='生成数据 JSONL 文件路径')
+    parser.add_argument('--exp_file', type=str, required=True, help='真实数据 JSONL 文件路径')
+    args = parser.parse_args()
+    
+    evaluator = Evaluator(args.gen_file, args.exp_file)
+    evaluator.run()

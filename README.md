@@ -1,35 +1,27 @@
 # LeCoQA: A Chinese Legal Consultation QA Dataset
 
+## Overview  
+
+Welcome to the official GitHub repository of the **LeCoQA** project!  
+
+This repository provides all essential resources related to the **LeCoQA** dataset, including:  
+- The full dataset with comprehensive documentation  
+- Implementations of various baseline methods along with scripts to reproduce their results  
+- A one-click evaluation script for efficiently assessing the quality of generated answers to legal-domain questions  
+
+### Repository Structure  
+- **data/**: Includes the dataset and preprocessing scripts  
+- **evaluation/**: Contains automated evaluation scripts and metrics for multi-dimensional assessment of generated answers in the legal domain  
+- **baseline_results/**, **inference/**: The first stores generated answers from our paper, while the second provides implementations of baseline approaches (e.g., in-context learning, fine-tuning, RAG) with usage instructions  
+- **README.md**: This file, along with detailed documentation for each submodule  
+
+### What You Can Do Here  
+- **Explore the Dataset**: Access real-world QA pairs and a comprehensive statutes corpus from the Chinese legal system.  
+- **Reproduce Baseline Results**: Utilize provided scripts and guidelines to replicate the performance of various baseline models on the LeCoQA dataset.  
+- **Evaluate Generated Answers**: Run automated, multi-dimensional assessments on your generated responses using the evaluation scripts.
 
 
-## Overview
-
-##TODO##
-
-
-
-## Installation Instructions
-
-### Requirements
-
-Before you begin, make sure you have the following packages installed in your environment:
-
-```plaintext
-jieba==0.42.1
-numpy==1.26.4
-pandas==2.2.2
-torch==2.0.1
-tqdm==4.66.5
-transformers==4.39.3
-deepspeed==0.10.0
-nltk==3.9.1
-rouge-score==0.1.2
-bert_score==0.3.9
-```
-
-
-
-### Setting Up Your Environment
+### Installation Instructions
 
 To create a new environment and install the required packages, follow these steps:
 
@@ -38,8 +30,6 @@ conda create -n lecoqa python=3.9
 conda activate lecoqa
 pip install -r requirements.txt
 ```
-
-
 
 **Note:** The `requirements.txt` file should exclude`torch`. Install PyTorch specifically according to your system setup by following the [official PyTorch installation guide](https://pytorch.org/get-started/locally/).
 
@@ -62,8 +52,6 @@ The root directory for the LeCoQA dataset is located at `/LeCoQA/data`. The data
 ```
 data/queries.json
 ```
-
-
 
 **Example Query:** Below is a sample entry from `queries.json`, showcasing the structure and data fields:
 
@@ -108,17 +96,13 @@ Translated:
 }
 ```
 
-
-
 **Corpus:** The comprehensive corpus containing all statutory articles is available in:
 
 ```
 data/corpus.json
 ```
 
-
-
-**Example Article:** Here is an example from `corpus.jsonl`, illustrating the format and content:
+**Example Article (Statute):** Here is an example from `corpus.jsonl`, illustrating the format and content:
 
 ```
 {
@@ -165,13 +149,6 @@ data/example/test.json # used for testing
 | Average Number of Evidence per Question | 1.7608554763 |
 
 
-
-### MODELS
-
-The experiments were carried out on four white-box models and one black-box model. The white-box models include **Baichuan-13B-Chat**, **qwen2.5-7B**, **qwen2.5-7B-Instruct**, and **qwen2.5-14B-Instruct**. Due to computational limitations, we only trained the models requiring training on the two 7B models. Our black-box model is the **GPT-3.5-turbo**.
-
-
-
 ### METRICS
 
 We conducted evaluation experiments on this dataset to assess the performance of various methods in generating answers to questions and measuring their similarity to correct answers. Specifically, we used the following four metrics:
@@ -185,25 +162,30 @@ We conducted evaluation experiments on this dataset to assess the performance of
 - **BLEU**: A widely used metric for evaluating the quality of text which measures the n-gram overlap between generated outputs and reference texts. Primarily used in machine translation evaluation, BLEU considers precision in n-gram matches, thus evaluating how closely the generated text matches the reference answer.
 
 
+### Running the Evaluation Script
 
-### METHODS
+To evaluate your generated answers, follow these instructions:
 
-The methods of generation are as follows:
+1. **Prepare the Data:**
+   Create two JSONL files where each line represents a case in the following format. One file contains ground truth answers, and the other consists of your generated answers.
 
-- **Zero-shot**: A method where the model is expected to generate answers without any prior specific training examples. The model relies on its pre-existing knowledge to respond to the questions.
+    ```json
+   {
+       "id": "unique_case_identifier",
+       "answer": "ground truth or generated answer text"
+   }
+    ```
 
-- **Few-shot**: The model is provided with a small set of examples or prompts (3 as default in our experiment) to generate answers, helping it better understand the task. 
+2. **Execute the Evaluation Python Code:**
 
-- **RAG (Retrieval-Augmented Generation)**: This approach combines retrieval mechanisms with generation capabilities. The model first retrieves relevant legal evidence related to the query and then uses this information to craft more informed answers. In our experiments, we recall ten examples per query.
+   ```bash
+    cd evaluation
+    python calc.py \
+        --gen_file your_gen_file \
+        --exp_file ground_truth_file
+   ```
 
-- **Finetune**: Involves finetuning the models on our dataset to optimize its performance in answering legal-specific questions, enhancing its ability to generate contextually relevant answers.
-
-- **Pretrain + Finetune**: The model is initially pretrained on a large corpus of legal articles  to imbue it with extensive legal knowledge, followed by fine-tuning on the specific dataset to hone its response capabilities for the given queries.
-
-- **Few-shot + Evidence**: An extension of the few-shot approach, this method supplements the examples with additional evidence to solidify the grounding of the generated answers.
-
-The experimental results illustrate the capacity of these models under various configurations, demonstrating the practical applicability of machine learning techniques in the field of legal research.
-
+   This requires you to specify the path to the input file and the location of ground truth file.
 
 
 ### Experiment Results 
@@ -228,8 +210,59 @@ The experimental results illustrate the capacity of these models under various c
 |                      | Few-shot + Evidence|   0.1489 | 0.1789 |    0.6913 | 0.0341 |
 | qwen2.5-7B           | Finetune           |   **0.1941** | **0.2671** |    0.7334 | **0.1056** |
 |                      | Pretrain + Finetune|   0.1877 | 0.2612 |    **0.7335** | 0.1054 |
-|                      | Few-shot + Evidence|   0.0615 | 0.2044 |    0.6801 | 0.0554 |
 | Black Box LLM (GPT)  | Direct   |   **0.2686** | 0.2382 |    0.7003 | 0.0474 |
 |                      | Few-shot           |   0.1942 | 0.2288 |    0.7147 | 0.0533 |
 |                      | RAG                |   0.1845 | 0.2974 |    0.7437 | 0.1012 |
 |                      | Few-shot + Evidence|   0.2460 | <u>**0.3136**</u> |    <u>**0.7524**</u> | <u>**0.1152**</u> |
+
+
+
+## Baselines Reproduction
+
+### MODELS
+
+The experiments were carried out on four white-box models and one black-box model. The white-box models include **Baichuan-13B-Chat**, **qwen2.5-7B**, **qwen2.5-7B-Instruct**, and **qwen2.5-14B-Instruct**. Due to computational limitations, we only trained the models requiring training on the two 7B models. Our black-box model is **GPT-3.5-turbo**.
+
+### METHODS
+
+The methods of generation are as follows:
+
+- **Zero-shot**: A method where the model is expected to generate answers without any prior specific training examples. The model relies on its pre-existing knowledge to respond to the questions.
+
+- **Few-shot**: The model is provided with a small set of examples or prompts (3 as default in our experiment) to generate answers, helping it better understand the task. 
+
+- **RAG (Retrieval-Augmented Generation)**: This approach combines retrieval mechanisms with generation capabilities. The model first retrieves relevant legal evidence related to the query and then uses this information to craft more informed answers. In our experiments, we recall ten examples per query.
+
+- **Finetune**: Involves finetuning the models on our dataset to optimize its performance in answering legal-specific questions, enhancing its ability to generate contextually relevant answers.
+
+- **Pretrain + Finetune**: The model is initially pretrained on a large corpus of legal articles  to imbue it with extensive legal knowledge, followed by fine-tuning on the specific dataset to hone its response capabilities for the given queries.
+
+- **Few-shot + Evidence**: An extension of the few-shot approach, this method supplements the examples with additional evidence to solidify the grounding of the generated answers.
+
+The experimental results illustrate the capacity of these models under various configurations, demonstrating the practical applicability of machine learning techniques in the field of legal research.
+
+### Inference
+
+You can access to our demo inference code via **inference/** . For example, 
+```bash
+cd inference
+python inf.py 
+    --model specify_your_model \
+    --baseline str(direct/fewshot) \
+    --output specify_your_output_path
+```
+**Note**: You can add more inference templates if you have methods other than direct/fewshot.
+
+
+## License
+This project is licensed under [MIT License](https://github.com/oneal2000/LeCoQA/blob/main/LICENSE). Please review the LICENSE file for more details.
+
+## Citation
+If you find the LeCoQA dataset helpful for your research, or if you are also working on question-answering in the legal domain, we would sincerely appreciate it if you could cite our paper.
+
+[Add your citation details here]
+
+## Contact
+Question-answering in the legal domain is still an evolving research area that requires further exploration. Our dataset represents an initial step in this direction, and we warmly welcome discussions with researchers interested in this field.
+
+If you have any questions, suggestions, or would like to discuss further, we would greatly appreciate it if you could open an issue on GitHub or reach out to us at oneal2000@126.com
