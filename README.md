@@ -45,6 +45,25 @@ pip install torch==2.0.1
 
 The root directory for the LeCoQA dataset is located at `/LeCoQA/data`. The dataset comprises a total of 1,543 query-answer pairs and a corresponding large-scale corpus of 55,348 statutory articles.
 
+### Dataset Statistics
+
+Here are the files associated with the training and testing datasets, the datasets `train` and `test` are randomly split in a 4:1 ratio. 
+
+```
+data/example/train.json # used for training
+data/example/test.json # used for testing
+```
+
+| **STATISTICS**                          | **NUMBER**   |
+| --------------------------------------- | ------------ |
+| Train Questions                         | 1234         |
+| Test Questions                          | 309          |
+| Average Len of Questions                | 27.31        |
+| Average Len of Evidence                 | 126.80       |
+| Average Len of Answers                  | 231.32       |
+| Size of Corpus                          | 55348        |
+| Average Number of Evidence per Question | 1.7608554763 |
+
 ### Data Files and Structure
 
 **Queries:** The queries and their relevant answers are stored in the JSON file:
@@ -125,29 +144,45 @@ Translated:
 
 This collection includes national-level Chinese laws, regulations, and judicial interpretations. Our legal team has meticulously gathered the latest versions from official government platforms. The documents are organized into the smallest searchable units by article, allowing for detailed legal research and practical application.
 
+## Baselines Reproduction
+
+### MODELS
+
+The experiments were carried out on four white-box models and one black-box model. The white-box models include **Baichuan-13B-Chat**, **qwen2.5-7B**, **qwen2.5-7B-Instruct**, and **qwen2.5-14B-Instruct**. Due to computational limitations, we only trained the models requiring training on the two 7B models. Our black-box model is **GPT-3.5-turbo**.
+
+### METHODS
+
+The methods of generation are as follows:
+
+- **Zero-shot**: A method where the model is expected to generate answers without any prior specific training examples. The model relies on its pre-existing knowledge to respond to the questions.
+
+- **Few-shot**: The model is provided with a small set of examples or prompts (3 as default in our experiment) to generate answers, helping it better understand the task. 
+
+- **RAG (Retrieval-Augmented Generation)**: This approach combines retrieval mechanisms with generation capabilities. The model first retrieves relevant legal evidence related to the query and then uses this information to craft more informed answers. In our experiments, we recall ten examples per query.
+
+- **Finetune**: Involves finetuning the models on our dataset to optimize its performance in answering legal-specific questions, enhancing its ability to generate contextually relevant answers.
+
+- **Pretrain + Finetune**: The model is initially pretrained on a large corpus of legal articles  to imbue it with extensive legal knowledge, followed by fine-tuning on the specific dataset to hone its response capabilities for the given queries.
+
+- **Few-shot + Evidence**: An extension of the few-shot approach, this method supplements the examples with additional evidence to solidify the grounding of the generated answers.
+
+The experimental results illustrate the capacity of these models under various configurations, demonstrating the practical applicability of machine learning techniques in the field of legal research.
+
+### Inference
+
+You can access to our demo inference code via **inference/** . For example, 
+```bash
+cd inference
+python inf.py 
+    --model specify_your_model \
+    --baseline str(direct/fewshot) \
+    --output specify_your_output_path
+```
+**Note**: You can add more inference templates if you have methods other than direct/fewshot.
+
 ## Evaluation
 
 Our evaluation framework tests the dataset using multiple QA-pair generating methods, including Zero-shot, Few-shot, RAG, Finetune, Pretrain + Finetune and Few-shot + Evidence. We standardize our evaluation process by pre-processing the original queries and partitioning the dataset into two subsets: `train` and `test`. All related files are located in `data/example`.
-
-### Dataset Files
-
-Here are the files associated with the training and testing datasets, the datasets `train` and `test` are randomly split in a 4:1 ratio. 
-
-```
-data/example/train.json # used for training
-data/example/test.json # used for testing
-```
-
-| **STATISTICS**                          | **NUMBER**   |
-| --------------------------------------- | ------------ |
-| Train Questions                         | 1234         |
-| Test Questions                          | 309          |
-| Average Len of Questions                | 27.31        |
-| Average Len of Evidence                 | 126.80       |
-| Average Len of Answers                  | 231.32       |
-| Size of Corpus                          | 55348        |
-| Average Number of Evidence per Question | 1.7608554763 |
-
 
 ### METRICS
 
@@ -217,41 +252,7 @@ To evaluate your generated answers, follow these instructions:
 
 
 
-## Baselines Reproduction
 
-### MODELS
-
-The experiments were carried out on four white-box models and one black-box model. The white-box models include **Baichuan-13B-Chat**, **qwen2.5-7B**, **qwen2.5-7B-Instruct**, and **qwen2.5-14B-Instruct**. Due to computational limitations, we only trained the models requiring training on the two 7B models. Our black-box model is **GPT-3.5-turbo**.
-
-### METHODS
-
-The methods of generation are as follows:
-
-- **Zero-shot**: A method where the model is expected to generate answers without any prior specific training examples. The model relies on its pre-existing knowledge to respond to the questions.
-
-- **Few-shot**: The model is provided with a small set of examples or prompts (3 as default in our experiment) to generate answers, helping it better understand the task. 
-
-- **RAG (Retrieval-Augmented Generation)**: This approach combines retrieval mechanisms with generation capabilities. The model first retrieves relevant legal evidence related to the query and then uses this information to craft more informed answers. In our experiments, we recall ten examples per query.
-
-- **Finetune**: Involves finetuning the models on our dataset to optimize its performance in answering legal-specific questions, enhancing its ability to generate contextually relevant answers.
-
-- **Pretrain + Finetune**: The model is initially pretrained on a large corpus of legal articles  to imbue it with extensive legal knowledge, followed by fine-tuning on the specific dataset to hone its response capabilities for the given queries.
-
-- **Few-shot + Evidence**: An extension of the few-shot approach, this method supplements the examples with additional evidence to solidify the grounding of the generated answers.
-
-The experimental results illustrate the capacity of these models under various configurations, demonstrating the practical applicability of machine learning techniques in the field of legal research.
-
-### Inference
-
-You can access to our demo inference code via **inference/** . For example, 
-```bash
-cd inference
-python inf.py 
-    --model specify_your_model \
-    --baseline str(direct/fewshot) \
-    --output specify_your_output_path
-```
-**Note**: You can add more inference templates if you have methods other than direct/fewshot.
 
 
 ## License
