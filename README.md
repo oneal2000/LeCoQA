@@ -1,4 +1,4 @@
-# LeCoQA: A Chinese Legal Consultation QA Dataset
+# LeCo: A Benchmark for Chinese Legal Consultation
 
 ## Overview  
 
